@@ -1,3 +1,4 @@
+# const $ = new Env('MT签到');
 import requests, json, re
 # 这里填写COOKIE
 cookie = ''
