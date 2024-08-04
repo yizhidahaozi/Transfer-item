@@ -1,3 +1,5 @@
+挑我自己用的
+此脚本转载地址：https://github.com/KD-happy/KDCheckin
 # KD签到
 
 ![GitHub issues](https://img.shields.io/github/issues/KD-happy/KDCheckin?logo=github) ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/KD-happy/KDCheckin?logo=github) ![GitHub forks](https://img.shields.io/github/forks/KD-happy/KDCheckin?logo=github) ![GitHub Repo stars](https://img.shields.io/github/stars/KD-happy/KDCheckin?logo=github)
@@ -189,7 +191,7 @@ curl https://cdn.jsdelivr.net/gh/KD-happy/KDCheckin@main/other/go.sh|bash
 
 [获取钉钉自定义机器人webhook](http://note.youdao.com/noteshare?id=25d15ba93ca80a29cfbf550078d096a8&sub=78340C89F0BB4295A4E559E12ED2EC83)
 
-## Cookie.yml 简单介绍
+## Cookie.yml 简单配置介绍
 
 ```yaml
 # AcFun  <-  支持签到的名称
