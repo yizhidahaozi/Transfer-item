@@ -1,3 +1,4 @@
+# const $ = new Env('微博超话签到');
 import json
 
 import requests
