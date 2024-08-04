@@ -36,50 +36,40 @@ send:
 # 签到列表，如（AcFun, BLBL）
 signList: ''
 
-
-#----------------------------------------------------------------------------
 # AcFun
 AcFun:              # <-  支持签到的名称
-      send: 0       # <-  是否发送通知 0: 不发送，1: 发送
-      cookies:      # <-  cookies列表
-      - user:       # <- 用户
-      name: ''      # <- 用户名称
-      cookie: ''    # <- 关键cookie，必须有的cookie.   # 样本<-  acPasstoken, auth_key
+send: 0       # <-  是否发送通知 0: 不发送，1: 发送
+cookies:      # <-  cookies列表
+- user:       # <- 用户
+name: ''      # <- 用户名称
+cookie: ''    # <- 关键cookie，必须有的cookie.   # 样本<-  acPasstoken, auth_key
 
-
-#----------------------------------------------------------------------------
 # 爱好论坛
-AiHao:
+AiHao:              # <-  支持签到的名称
 send: 0
 cookies:
 - user:
  name: ''
  cookie: ''         # <- 关键cookie，必须有的cookie.   # 样本<-  95hf_2132_saltkey, 95hf_2132_auth
 
-
-#----------------------------------------------------------------------------
 # 阿里云盘
-ALiYun:
+ALiYun:             # <-  支持签到的名称
 send: 0
 cookies:
 - user:
 name: ''
 cookie: ''          # <- 关键cookie，必须有的cookie.   # 样本<-  JSON.parse(localStorage.token).refresh_token <= 控制台输入获取token
 
-
-#----------------------------------------------------------------------------
 # 百度贴吧
-BDTieBa:
+BDTieBa:             # <-  支持签到的名称
 send: 0
 cookies:
 - user:
 name: ''
  cookie: ''          # <- 关键cookie，必须有的cookie.   # 样本<-  BDUSS, STOKEN
 
-
-#----------------------------------------------------------------------------
 # 哔哩哔哩
-BLBL:
+BLBL:                # <-  支持签到的名称
 send: 0
 cookies:
 - user:
@@ -95,8 +85,6 @@ mid: ''
 # 投币数量（0 <= coin <= 5）
             coin: 0
 
-
-#----------------------------------------------------------------------------
 # 天翼云盘
 Cloud:      
 # 是否推送
@@ -121,7 +109,8 @@ send: 0
 cookies:
 - user:
 name: ''
-cookie: ''            # <- 关键cookie，必须有的cookie.   # 样本<-  X-Auth-Token, _xsrf
+# X-Auth-Token, _xsrf
+cookie: ''
 
 
 #----------------------------------------------------------------------------
@@ -131,7 +120,7 @@ send: 0
 cookies:
 - user:
 name: ''
-# <- 关键cookie，必须有的cookie.   # 样本<-  X-Auth-Token, _xsrfuser_id, token, device_id, app_id
+# user_id, token, device_id, app_id
 cookie: ''
 
 
@@ -142,7 +131,7 @@ send: 0
 cookies:
 - user:
 name: ''
-# <- 关键cookie，必须有的cookie.   # 样本<-  TWcq_2132_saltkey, TWcq_2132_auth
+# TWcq_2132_saltkey, TWcq_2132_auth
 cookie: ''
 
 
