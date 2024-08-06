@@ -38,8 +38,8 @@ B64MAP = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 s = requests.Session()
  
 # 在下面两行的引号内贴上账号（仅支持手机号）和密码
-username = "13931295236"
-password = "WOdety87."
+username = "账号"
+password = "密码"
  
 _ = """
 if(username == "" or password == ""):
@@ -47,7 +47,7 @@ if(username == "" or password == ""):
     password = input("密码：")
 # """
  
-assert username and password, "在第23、24行填入有效账号和密码"
+assert username and password, "在第41、42行填入有效账号和密码"
 
 def int2char(a):
     return BI_RM[a]
