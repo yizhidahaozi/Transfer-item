@@ -8,26 +8,6 @@ import notify
 from datetime import datetime
 from zhdate import ZhDate
 
-# 在这里填入你的阳历生日，格式为 "月-日"
-solar_birthday_str = "01-01"
-
-# 获取当前日期（并转换为日期格式）
-now = datetime.now().date()
-
-# 获取今年的阳历生日
-solar_birthday_this_year = datetime.strptime(f"{now.year}-{solar_birthday_str}", "%Y-%m-%d").date()
-
-# 如果今年的阳历生日已经过去，那么下一次阳历生日就是明年的生日
-if now > solar_birthday_this_year:
-    next_solar_birthday = datetime.strptime(f"{now.year + 1}-{solar_birthday_str}", "%Y-%m-%d").date()
-else:
-    next_solar_birthday = solar_birthday_this_year
-
-# 计算距离下一次阳历生日还有多少天
-solar_days_left = (next_solar_birthday - now).days
-
-info = f"距离你下一次的阳历生日还有 {solar_days_left} 天。"
-
 # 在这里填入你的阴历生日，格式为 "月-日"
 lunar_birthday_str = "01-01"
 
