@@ -1,11 +1,3 @@
-#!/usr/bin/python3
-# -- coding: utf-8 --
-# @Time : 2023/4/8 9:23
-#作者：https://www.52pojie.cn/forum.php?mod=viewthread&tid=1784111&highlight=%C7%A9%B5%BD
-# -------------------------------
-# cron "30 4 * * *" script-path=xxx.py,tag=匹配cron用
-# const $ = new Env('天翼云盘签到');
-
 # #!/usr/bin/python3
 # # -- coding: utf-8 --
 # # @Time : 2023/4/4 9:23
@@ -13,8 +5,6 @@
 # # -------------------------------
 # # cron "30 4 * * *" script-path=xxx.py,tag=匹配cron用
 # # const $ = new Env('天翼云盘签到');
-#
-
 
 # 来自吾爱论坛，在原作者的基础上把推送消息换成了青龙自带的通知，修复了脚本在青龙容器运行不会自动停止的bug，如有侵权请告知，将立即删除。
 # @author Sten
@@ -47,7 +37,7 @@ if(username == "" or password == ""):
     password = input("密码：")
 # """
  
-assert username and password, "在第41、42行填入有效账号和密码"
+assert username and password, "在第36、37行填入有效账号和密码"
 
 def int2char(a):
     return BI_RM[a]
