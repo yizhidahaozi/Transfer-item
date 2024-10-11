@@ -3,7 +3,7 @@
 # # @Time : 2023/4/4 9:23
 # #作者：https://www.52pojie.cn/thread-1231190-1-1.html
 # # -------------------------------
-# # cron "30 4 * * *" script-path=xxx.py,tag=匹配cron用
+# # cron "30 8/14 * * *" script-path=xxx.py,tag=匹配cron用
 # # const $ = new Env('天翼云盘签到');
 
 # 来自吾爱论坛，在原作者的基础上把推送消息换成了青龙自带的通知，修复了脚本在青龙容器运行不会自动停止的bug，如有侵权请告知，将立即删除。
