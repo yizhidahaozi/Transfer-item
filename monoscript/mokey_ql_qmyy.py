@@ -1,4 +1,4 @@
-# cron:6 6 * * *
+# cron:0 8 * * *
 # const $ = new Env("[mokey]奇妙应用自动签到")
 # V1.0.1
 # 作者：全戈
