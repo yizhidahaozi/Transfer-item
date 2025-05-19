@@ -16,33 +16,34 @@ import re
 import json
 import base64
 import hashlib
-import urllib.parse,hmac
+import urllib.parse
+import hmac
 import rsa
 import requests
 import random
- 
+
 BI_RM = list("0123456789abcdefghijklmnopqrstuvwxyz")
- 
+
 B64MAP = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
- 
+
 s = requests.Session()
- 
+
 # 在下面两行的引号内贴上账号（仅支持手机号）和密码
-username = "账号"
-password = "密码"
- 
+username = "这里填账号"
+password = "这里填密码"
+
 _ = """
 if(username == "" or password == ""):
     username = input("账号：")
     password = input("密码：")
 # """
- 
+
 assert username and password, "在第36、37行填入有效账号和密码"
 
 def int2char(a):
     return BI_RM[a]
- 
- 
+
+
 def b64tohex(a):
     d = ""
     e = 0
@@ -70,19 +71,19 @@ def b64tohex(a):
     if e == 1:
         d += int2char(c << 2)
     return d
- 
- 
+
+
 def rsa_encode(j_rsakey, string):
     rsa_key = f"-----BEGIN PUBLIC KEY-----\n{j_rsakey}\n-----END PUBLIC KEY-----"
     pubkey = rsa.PublicKey.load_pkcs1_openssl_pem(rsa_key.encode())
     result = b64tohex((base64.b64encode(rsa.encrypt(f'{string}'.encode(), pubkey))).decode())
     return result
- 
- 
+
+
 def calculate_md5_sign(params):
     return hashlib.md5('&'.join(sorted(params.split('&'))).encode('utf-8')).hexdigest()
- 
- 
+
+
 def login(username, password):
     #https://m.cloud.189.cn/login2014.jsp?redirectURL=https://m.cloud.189.cn/zhuanti/2021/shakeLottery/index.html
     url=""
@@ -96,7 +97,7 @@ def login(username, password):
         # print(url)  # 打印url
     else:  # 如果没有找到匹配
         print("没有找到url")
- 
+
     r = s.get(url)
     # print(r.text)
     pattern = r"<a id=\"j-tab-login-link\"[^>]*href=\"([^\"]+)\""  # 匹配id为j-tab-login-link的a标签，并捕获href引号内的内容
@@ -106,7 +107,7 @@ def login(username, password):
         # print("href:" + href)  # 打印href链接
     else:  # 如果没有找到匹配
         print("没有找到href链接")
- 
+
     r = s.get(href)
     captchaToken = re.findall(r"captchaToken' value='(.+?)'", r.text)[0]
     lt = re.findall(r'lt = "(.+?)"', r.text)[0]
@@ -114,7 +115,7 @@ def login(username, password):
     paramId = re.findall(r'paramId = "(.+?)"', r.text)[0]
     j_rsakey = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
     s.headers.update({"lt": lt})
- 
+
     username = rsa_encode(j_rsakey, username)
     password = rsa_encode(j_rsakey, password)
     url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
@@ -141,10 +142,10 @@ def login(username, password):
     redirect_url = r.json()['toUrl']
     r = s.get(redirect_url)
     return s
- 
- 
+
+
 def main():
-    s=login(username, password)
+    s = login(username, password)
     rand = str(round(time.time() * 1000))
     surl = f'https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K'
     url = f'https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN&activityId=ACT_SIGNIN'
@@ -164,7 +165,7 @@ def main():
     else:
         print(f"已经签到过了，签到获得{netdiskBonus}M空间")
         res1 = f"已经签到过了，签到获得{netdiskBonus}M空间"
- 
+
     headers = {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 5.1.1; SM-G930K Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Ecloud/8.6.3 Android/22 clientId/355325117317828 clientModel/SM-G930K imsi/460071114317824 clientChannelId/qq proVersion/1.0.6',
         "Referer": "https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp?albumBackupOpened=1",
@@ -187,7 +188,7 @@ def main():
         description = response.json()['description']
         print(f"抽奖获得{description}")
         res3 = f"抽奖获得{description}"
- 
+
     response = s.get(url3, headers=headers)
     if ("errorCode" in response.text):
         print(response.text)
@@ -197,27 +198,51 @@ def main():
         print(f"链接3抽奖获得{description}")
         res4 = f"链接3抽奖获得{description}"
 
-    title = "天翼云签到"
-    content = f"""
+    # 构建通知内容
+    info = f"""
     {res1}
     {res2}
     {res3}
     {res4}
     """
-    notify.send(title, content)
+    
+    # 调用通知函数
+    title = "天翼云签到"
+    content = info
+    
+    # 尝试发送通知
+    try:
+        notify.send(title, content)
+        print("通知发送成功")
+    except Exception as e:
+        print(f"通知发送失败: {e}")
+    
+    # 模拟青龙API通知（如果没有青龙API，这部分会出错）
+    try:
+        # 这里假设青龙API已经定义，如果没有定义会触发异常
+        print("发送通知...")
+        print(QLAPI.systemNotify({ "title": "自动签到通知-天翼应用", "content": info }))
+    except NameError:
+        print("青龙API未定义，跳过青龙API通知")
+    except Exception as e:
+        print(f"青龙API通知发送失败: {e}")
 
 def lambda_handler(event, context):  # aws default
     main()
- 
- 
+
+
 def main_handler(event, context):  # tencent default
     main()
- 
- 
+
+
 def handler(event, context):  # aliyun default
     main()
- 
- 
+
+
 if __name__ == "__main__":
+    # 在执行前随机延时，避免行为过于规律
+    delay = random.randint(5, 30)
+    print(f"随机延时 {delay} 秒后执行...")
+    time.sleep(delay)
+    
     main()
-    time.sleep(random.randint(5, 30))
