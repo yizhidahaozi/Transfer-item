@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -- coding: utf-8 --
 # -------------------------------
-# @Author : 增强版富贵论坛签到脚本
+# @Author : 优化版富贵论坛签到脚本
 # @Time : 2025/7/1
 # -------------------------------
 # cron "1 0 * * *" script-path=xxx.py,tag=匹配cron用
@@ -45,16 +45,13 @@ class FGLTForumSignIn:
                     data = json.load(f)
                     self.signin_count = data.get('count', 0)
                     self.last_signin_date = data.get('last_date', '')
-                    self.total_signin = data.get('total', 0)
             else:
                 self.signin_count = 0
                 self.last_signin_date = ''
-                self.total_signin = 0
         except Exception as e:
             print(f"加载签到统计失败: {e}")
             self.signin_count = 0
             self.last_signin_date = ''
-            self.total_signin = 0
     
     def save_signin_count(self):
         """保存签到统计信息"""
@@ -62,7 +59,6 @@ class FGLTForumSignIn:
             data = {
                 'count': self.signin_count,
                 'last_date': self.last_signin_date,
-                'total': self.total_signin
             }
             with open(self.signin_count_file, 'w') as f:
                 json.dump(data, f)
@@ -197,16 +193,15 @@ class FGLTForumSignIn:
                 if "成功" in result or "已签到" in result:
                     if need_signin and self.check_need_signin():
                         self.signin_count += 1
-                        self.total_signin += 1
                         self.last_signin_date = today
                         self.save_signin_count()
-                        return f"签到成功，今日第{self.signin_count}次签到，累计总签到{self.total_signin}次"
+                        return f"签到成功，今日第{self.signin_count}次签到"
                     else:
-                        return f"{result}，今日已签到{self.signin_count}次，累计总签到{self.total_signin}次"
+                        return f"{result}，今日已签到{self.signin_count}次"
                 else:
                     return result
             else:
-                return f"签到成功，今日第{self.signin_count}次签到，累计总签到{self.total_signin}次"
+                return f"签到成功，今日第{self.signin_count}次签到"
         except requests.RequestException as e:
             return f"签到请求失败: {e}"
     
@@ -246,11 +241,9 @@ class FGLTForumSignIn:
             print(f"等待{delay:.2f}秒后处理下一个账号")
             time.sleep(delay)
         
-        # 只发送成功的签到提醒，包含累计签到信息
+        # 只发送成功的签到提醒
         if success_results:
-            # 构建包含累计签到的通知内容
-            total_signin_msg = f"富贵论坛累计签到次数: {self.total_signin} 次\n\n"
-            success_summary = total_signin_msg + "\n\n".join(success_results)
+            success_summary = "\n\n".join(success_results)
             notify.send("富贵论坛签到成功提醒", success_summary)
             print("\n成功通知内容:")
             print(success_summary)
