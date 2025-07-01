@@ -191,11 +191,12 @@ class Quark:
         else:
             log = f" 昵称: {account_info['nickname']}"
             msg += log + "\n"
-            # 每日领空间
+            
+            # 只在签到成功或失败时记录消息
             growth_info = self.get_growth_info()
             if growth_info:
                 if growth_info["cap_sign"]["sign_daily"]:
-                    log = f"✅ 执行签到: 今日已签到+{int(growth_info['cap_sign']['sign_daily_reward'] / 1024 / 1024)}MB，连签进度({growth_info['cap_sign']['sign_progress']}/{growth_info['cap_sign']['sign_target']})"
+                    log = f"✅ 今日已签到+{int(growth_info['cap_sign']['sign_daily_reward'] / 1024 / 1024)}MB，连签进度({growth_info['cap_sign']['sign_progress']}/{growth_info['cap_sign']['sign_target']})"
                     msg += log + "\n"
                 else:
                     sign, sign_return = self.get_growth_sign()
@@ -203,12 +204,13 @@ class Quark:
                         # 重新获取成长信息以更新签到状态
                         new_growth_info = self.get_growth_info()
                         progress = new_growth_info["cap_sign"]["sign_progress"] if new_growth_info else growth_info["cap_sign"]["sign_progress"] + 1
-                        log = f"✅ 执行签到: 今日签到+{int(sign_return / 1024 / 1024)}MB，连签进度({progress}/{growth_info['cap_sign']['sign_target']})"
+                        log = f"✅ 签到成功: +{int(sign_return / 1024 / 1024)}MB，连签进度({progress}/{growth_info['cap_sign']['sign_target']})"
                         msg += log + "\n"
                     else:
-                        msg += f"❌ 执行签到失败: {sign_return}\n"
+                        msg += f"❌ 签到失败: {sign_return}\n"
             else:
                 msg += "❌ 获取成长信息失败\n"
+        
         return msg
 
 def main():
