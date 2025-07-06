@@ -16,7 +16,6 @@ import notify
 import random
 import hashlib
 from datetime import datetime
-from bs4 import BeautifulSoup
 
 class FGLTForumSignIn:
     def __init__(self, cookies):
@@ -33,12 +32,7 @@ class FGLTForumSignIn:
             'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
-            'Cache-Control': 'max-age=0',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'same-origin',
-            'Sec-Fetch-User': '?1',
-            'TE': 'trailers'
+            'Cache-Control': 'max-age=0'
         }
         self.signin_count_file = 'signin_count.json'
         self.load_signin_count()
@@ -96,76 +90,34 @@ class FGLTForumSignIn:
                 response = session.get(page)
                 response.raise_for_status()
                 
-                # 增强安全验证检测
                 verification_keywords = [
-                    "安全验证", "验证码", "verification", "captcha", "security", 
-                    "需要登录", "请登录", "风控", "验证", "human verification"
+                    "安全验证", "验证码", "verification", "captcha", "security", "需要登录", "请登录"
                 ]
                 if any(keyword in response.text for keyword in verification_keywords):
                     print("检测到安全验证页面，无法继续签到")
-                    # 保存页面内容用于调试
-                    with open(f"security_verification_{int(time.time())}.html", "w", encoding="utf-8") as f:
-                        f.write(response.text)
-                    print(f"安全验证页面已保存至security_verification_*.html")
+                    print(f"页面内容片段: {response.text[:200]}")
                     return None
                 
-                # 混合使用BeautifulSoup和正则表达式提取formhash
-                try:
-                    soup = BeautifulSoup(response.text, 'html.parser')
-                    # 通过标签属性提取
-                    input_tags = soup.find_all('input', {'name': 'formhash'})
-                    if input_tags:
-                        formhash = input_tags[0].get('value')
-                        if formhash:
-                            print(f"通过BeautifulSoup从 {page} 获取到formhash: {formhash[:4]}...")
-                            return formhash
-                    
-                    # 通过JavaScript变量提取
-                    script_tags = soup.find_all('script')
-                    for script in script_tags:
-                        script_text = script.get_text()
-                        match = re.search(r'var\s+formhash\s*=\s*["\'](.*?)["\']', script_text)
-                        if match:
-                            formhash = match.group(1)
-                            print(f"从JavaScript变量获取到formhash: {formhash[:4]}...")
-                            return formhash
-                except Exception as e:
-                    print(f"BeautifulSoup解析异常: {e}")
-                
-                # 扩展正则表达式匹配模式
                 patterns = [
-                    r'<input\s+type="hidden"\s+name="formhash"\s+value="(.*?)"\s*/>',
-                    r'formhash=([a-f0-9]{8,32})',
-                    r'"formhash"\s*:\s*["\']([a-f0-9]{8,32})["\']',
-                    r'&formhash=([a-f0-9]{8,32})',
+                    r'<input type="hidden" name="formhash" value="(.*?)" />',
+                    r'formhash=(.*?)[&\'" ]',
+                    r'"formhash":"(.*?)"',
                     r'formhash=(\w+)',
-                    r'<input\s+id="formhash"\s+value="(.*?)"',
-                    r'formhash:\s*["\'](.*?)["\']',
-                    r'_formhash\s*=\s*["\'](.*?)["\']'
+                    r'<input type="hidden" id="formhash" value="(.*?)"',
+                    r'var formhash = "(.*?)"'
                 ]
                 
                 for pattern in patterns:
                     match = re.search(pattern, response.text)
                     if match:
-                        formhash = match.group(1)
-                        print(f"成功从 {page} 使用模式 {pattern} 获取到formhash: {formhash[:4]}...")
-                        return formhash
+                        print(f"成功从 {page} 获取到formhash，使用模式: {pattern}")
+                        return match.group(1)
             
-            # 保存未获取到formhash的页面内容
-            with open(f"no_formhash_{int(time.time())}.html", "w", encoding="utf-8") as f:
-                f.write(response.text[:5000])  # 保存前5000字符
-            print(f"未能获取formhash，页面内容已保存至no_formhash_*.html")
+            print("未能在任何页面中获取到formhash")
+            print(f"页面内容片段: {response.text[:300]}")
             return None
         except requests.RequestException as e:
             print(f"获取formhash请求失败: {e}")
-            # 记录网络请求异常详情
-            if hasattr(e, 'response') and e.response:
-                print(f"响应状态码: {e.response.status_code}")
-                if e.response.status_code == 429:
-                    print("检测到请求频率限制(429)，请降低请求频率")
-            return None
-        except Exception as e:
-            print(f"获取formhash过程中发生未知异常: {e}")
             return None
     
     def sign_in(self, cookie):
@@ -181,37 +133,61 @@ class FGLTForumSignIn:
         # 获取formhash
         formhash = self.get_formhash(session)
         if not formhash:
-            # 记录详细的formhash获取失败信息
-            fail_reason = "获取formhash失败，可能原因：Cookie失效/安全验证/网站结构变更"
-            print(fail_reason)
-            return fail_reason
+            return "获取formhash失败，签到终止"
         
-        print(f'获取到formhash: {formhash[:4]}...')
+        print(f'获取到formhash: {formhash}')
         
         # 执行签到
         sign_url = f"{self.base_url}plugin.php?id=dsu_amupper&ppersubmit=true&formhash={formhash}&infloat=yes&handlekey=dsu_amupper&inajax=1&ajaxtarget=fwin_content_dsu_amupper"
         
         try:
-            # 增加请求头随机性
-            session.headers.update({
-                'X-Requested-With': random.choice(['XMLHttpRequest', ''])
-            })
-            response = session.post(sign_url, timeout=15)
+            response = session.post(sign_url)
             response.raise_for_status()
             
             # 解析签到结果
             result = None
-            response_text = response.text
             
-            # 优先解析XML响应（可能来自某些框架）
             try:
                 import xml.etree.ElementTree as ET
-                root = ET.fromstring(response_text)
+                root = ET.fromstring(response.text)
                 cdata_content = root.text
                 if cdata_content:
-                    result = self._parse_result(cdata_content)
+                    patterns = [
+                        r'showDialog\("(.*?)",',
+                        r'"message":"(.*?)"',
+                        r'<div class="alert_info">(.*?)</div>',
+                        r'<div class="alert_success">(.*?)</div>',
+                        r'签到成功',
+                        r'已签到',
+                        r'您今日已经签到',
+                        r'恭喜你签到成功',
+                        r'签到排名第(.*?)名'
+                    ]
+                    for pattern in patterns:
+                        match = re.search(pattern, cdata_content)
+                        if match:
+                            result = match.group(1) if len(match.groups()) > 0 else pattern
+                            break
             except:
-                result = self._parse_result(response_text)
+                pass
+            
+            if not result:
+                patterns = [
+                    r'showDialog\("(.*?)",',
+                    r'"message":"(.*?)"',
+                    r'<div class="alert_info">(.*?)</div>',
+                    r'<div class="alert_success">(.*?)</div>',
+                    r'签到成功',
+                    r'已签到',
+                    r'您今日已经签到',
+                    r'恭喜你签到成功',
+                    r'签到排名第(.*?)名'
+                ]
+                for pattern in patterns:
+                    match = re.search(pattern, response.text)
+                    if match:
+                        result = match.group(1) if len(match.groups()) > 0 else pattern
+                        break
             
             if result:
                 if "成功" in result or "已签到" in result:
@@ -223,130 +199,59 @@ class FGLTForumSignIn:
                     else:
                         return f"{result}，今日已签到{self.signin_count}次"
                 else:
-                    # 记录详细的失败原因
-                    return f"签到失败: {result}"
+                    return result
             else:
-                # 处理未知响应格式
-                return "签到失败: 无法解析响应内容"
-        except requests.HTTPError as e:
-            # 处理HTTP错误状态码
-            status_code = e.response.status_code
-            error_msg = f"签到请求失败(HTTP {status_code}): {e.response.reason}"
-            if status_code == 403:
-                error_msg += "，可能原因：权限不足或账号被封禁"
-            elif status_code == 500:
-                error_msg += "，服务器内部错误，请稍后重试"
-            print(error_msg)
-            return error_msg
-        except requests.Timeout:
-            # 处理请求超时
-            print("签到请求超时，请检查网络连接或服务器状态")
-            return "签到失败: 请求超时"
-        except requests.ConnectionError:
-            # 处理连接错误
-            print("签到请求连接错误，请检查网络连接")
-            return "签到失败: 连接错误"
-        except Exception as e:
-            # 处理其他异常
-            print(f"签到过程中发生未知异常: {e}")
-            return f"签到失败: 未知异常 - {str(e)}"
-    
-    def _parse_result(self, text):
-        """解析签到结果文本"""
-        patterns = [
-            r'showDialog\("(.*?)",',
-            r'"message"\s*:\s*["\'](.*?)["\']',
-            r'<div\s+class="alert_info">\s*(.*?)\s*</div>',
-            r'<div\s+class="alert_success">\s*(.*?)\s*</div>',
-            r'签到成功',
-            r'已签到',
-            r'您今日已经签到',
-            r'恭喜你签到成功',
-            r'签到排名第(\d+)名',
-            r'错误：(.*)',
-            r'失败：(.*)',
-            r'提示：(.*)',
-            r'系统提示：(.*)'
-        ]
-        for pattern in patterns:
-            match = re.search(pattern, text)
-            if match:
-                return match.group(1) if len(match.groups()) > 0 else pattern
-        return None
+                return f"签到成功，今日第{self.signin_count}次签到"
+        except requests.RequestException as e:
+            return f"签到请求失败: {e}"
     
     def get_random_headers(self):
         """获取随机请求头，增强反爬能力"""
         headers = self.headers.copy()
         headers['User-Agent'] = random.choice(self.user_agents)
-        # 增加随机请求头参数
-        headers['Accept-Encoding'] = random.choice(['gzip, deflate', 'gzip, deflate, br', 'identity'])
-        headers['DNT'] = str(random.randint(0, 1))
         return headers
     
     def parse_cookie(self, cookie_str):
-        """将cookie字符串解析为字典格式，增强错误处理"""
+        """将cookie字符串解析为字典格式"""
         try:
-            if not cookie_str:
-                return {}
             return dict(item.split('=', 1) for item in cookie_str.split('; ') if '=' in item)
-        except (ValueError, AttributeError) as e:
-            print(f"解析cookie失败: {cookie_str}, 错误: {e}")
+        except ValueError:
+            print(f"解析cookie失败: {cookie_str}")
             return {}
     
     def run(self):
-        """执行所有账号的签到操作，增强失败信息发送"""
+        """执行所有账号的签到操作"""
         success_results = []
         failed_results = []
         
         for i, cookie in enumerate(self.cookies, 1):
             print(f"\n***开始第{i}个账号签到***")
-            try:
-                cookie_hash = hashlib.md5(cookie.encode('utf-8')).hexdigest()[:8]
-                print(f"处理账号 (哈希): {cookie_hash}")
-                
-                result = self.sign_in(cookie)
-                print(result)
-                
-                if "签到成功" in result or "已签到" in result:
-                    success_results.append(f"账号{i}: {result}")
-                else:
-                    failed_results.append(f"账号{i}: {result}")
-                
-                delay = random.uniform(8, 15)
-                print(f"等待{delay:.2f}秒后处理下一个账号")
-                time.sleep(delay)
-            except Exception as e:
-                # 捕获账号处理过程中的全局异常
-                error_msg = f"账号{i}处理过程中发生未预期异常: {str(e)}"
-                print(error_msg)
-                failed_results.append(f"账号{i}: {error_msg}")
-                time.sleep(random.uniform(5, 10))
+            cookie_hash = hashlib.md5(cookie.encode('utf-8')).hexdigest()[:8]
+            print(f"处理账号 (哈希): {cookie_hash}")
+            
+            result = self.sign_in(cookie)
+            print(result)
+            
+            if "签到成功" in result or "已签到" in result:
+                success_results.append(f"账号{i}: {result}")
+            else:
+                failed_results.append(f"账号{i}: {result}")
+            
+            delay = random.uniform(8, 15)
+            print(f"等待{delay:.2f}秒后处理下一个账号")
+            time.sleep(delay)
         
-        # 发送成功和失败通知
-        notification_content = ""
+        # 只发送成功的签到提醒
         if success_results:
-            success_summary = "\n".join([f"✅ {res}" for res in success_results])
-            notification_content += f"【签到成功】\n{success_summary}\n\n"
+            success_summary = "\n\n".join(success_results)
+            notify.send("富贵论坛签到成功提醒", success_summary)
+            print("\n成功通知内容:")
+            print(success_summary)
         
+        # 打印失败的结果，但不发送通知
         if failed_results:
-            failed_summary = "\n".join([f"❌ {res}" for res in failed_results])
-            notification_content += f"【签到失败】\n{failed_summary}"
-        
-        if notification_content:
-            try:
-                notify.send("富贵论坛签到结果通知", notification_content)
-                print("\n通知已发送，内容如下:")
-                print(notification_content)
-            except Exception as e:
-                print(f"发送通知失败: {e}")
-                print("通知内容:")
-                print(notification_content)
-        
-        # 打印统计信息
-        if not failed_results:
-            print("\n所有账号签到成功")
-        else:
-            print(f"\n签到统计: {len(success_results)}/{len(self.cookies)}个账号成功，{len(failed_results)}个账号失败")
+            print("\n失败的签到结果:")
+            print("\n\n".join(failed_results))
         
         return success_results, failed_results
 
@@ -355,11 +260,6 @@ if __name__ == "__main__":
     
     if not fg_cookies or fg_cookies[0] == "":
         print("未配置cookie，退出程序")
-        # 发送配置错误通知
-        try:
-            notify.send("富贵论坛签到错误", "未配置cookie，签到程序退出")
-        except:
-            pass
     else:
         print(f"共配置了{len(fg_cookies)}个账号")
         
@@ -369,3 +269,8 @@ if __name__ == "__main__":
         
         sign_bot = FGLTForumSignIn(fg_cookies)
         success, failed = sign_bot.run()
+        
+        if not failed:
+            print("所有账号签到成功")
+        else:
+            print(f"{len(failed)}/{len(fg_cookies)}个账号签到失败")
