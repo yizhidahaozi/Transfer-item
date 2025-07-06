@@ -101,3 +101,10 @@ for cookie in list_cookie:
     except Exception as e:
         print("签到失败了~\n错误原因:" + str(e))
         notify.send("MT论坛签到", "MT论坛签到失败了~\n错误原因:" + str(e))
+
+
+print(info)
+
+# 调用青龙api发送通知
+print("发送通知...")
+print(QLAPI.systemNotify({ "title": "自动签到通知-MT应用", "content": info }))
