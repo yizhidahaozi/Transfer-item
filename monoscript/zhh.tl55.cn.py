@@ -3,7 +3,7 @@ import requests
 import os
 import re
 import datetime
-
+# const $ = new Env('签到zhh.tl55.cn')
 #  配置信息（从环境变量添加Cookie，名称 SIGN_COOKIE ）
 
 # 多渠道通知功能模块（从夸克脚本提取并适配）
